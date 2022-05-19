@@ -3,19 +3,19 @@ const PATH = require('path');
 const { stdin, stdout } = process;
 const readline = require('readline');
 
-const input = FS.createWriteStream(PATH.join(__dirname,'text.txt'),'utf-8');
+let inputToFile = FS.createWriteStream(PATH.join(__dirname,'text.txt'),'utf-8');
 const output = FS.createReadStream(PATH.join(__dirname,'text.txt'),'utf-8');
 
 const r1 = readline.createInterface({
   input:process.stdin,
-  output:process.stdout
+  output:inputToFile
 })
-
+stdout.write('Введите текст:\n');
 r1.on("line",(line)=>{
-  console.log(line);
-  if (line==='exit') r1.close();
-
-})
+  if (line==='exit') {r1.close();process.exit();}
+  stdout.write('Введите текст:\n');
+  inputToFile.write(line);
+});
 r1.on("close",()=>{
-  console.log('Bye');
+  console.log('Программа завершена');
 })
