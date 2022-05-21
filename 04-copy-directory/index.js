@@ -1,9 +1,8 @@
-const FS = require("fs");
-const { resolve } = require("path");
-const PATH = require("path");
+const FS = require('fs');
+const PATH = require('path');
 
-const FOLDER = PATH.join(__dirname, "files");
-const FOLDER_COPY = PATH.join(__dirname, "files-copy");
+const FOLDER = PATH.join(__dirname, 'files');
+const FOLDER_COPY = PATH.join(__dirname, 'files-copy');
 
 FS.promises
   .access(FOLDER_COPY, FS.constants.F_OK)
@@ -17,11 +16,11 @@ FS.promises
     return FS.promises.mkdir(FOLDER_COPY);
   })
   .then(() => {
-    return FS.readdir(FOLDER, { withFileTypes: "true" }, (err, files) => {
+    return FS.readdir(FOLDER, { withFileTypes: 'true' }, (err, files) => {
       files.forEach((file) => {
         FS.copyFile(
-          PATH.join(__dirname, "files", file.name),
-          PATH.join(__dirname, "files-copy", file.name),
+          PATH.join(__dirname, 'files', file.name),
+          PATH.join(__dirname, 'files-copy', file.name),
           (err) => {
             if (err) return console.log(err);
           }
