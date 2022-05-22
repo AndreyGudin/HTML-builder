@@ -1,33 +1,32 @@
-const FS = require("fs");
-const { resolve } = require("path");
-const PATH = require("path");
+const FS = require('fs');
+const PATH = require('path');
 
-const COMPONENTS = PATH.join(__dirname, "components");
-const ASSETS = PATH.join(__dirname, "assets");
-const STYLES = PATH.join(__dirname, "styles");
-const DIST = PATH.join(__dirname, "project-dist");
-const TEMPLATE_FILE = PATH.join(__dirname, "template.html");
-const INDEX_FILE = PATH.join(DIST, "index.html");
-const STYLE_FILE = PATH.join(DIST, "style.css");
+const COMPONENTS = PATH.join(__dirname, 'components');
+const ASSETS = PATH.join(__dirname, 'assets');
+const STYLES = PATH.join(__dirname, 'styles');
+const DIST = PATH.join(__dirname, 'project-dist');
+const TEMPLATE_FILE = PATH.join(__dirname, 'template.html');
+const INDEX_FILE = PATH.join(DIST, 'index.html');
+const STYLE_FILE = PATH.join(DIST, 'style.css');
 
 async function readComponentsHTML() {
   const FILES = await FS.promises.readdir(COMPONENTS, { withFileTypes: true });
   let filePaths = [];
   FILES.forEach((file) => {
-    if (PATH.extname(file.name) === ".html") {
-      let key = file.name.split(".")[0];
+    if (PATH.extname(file.name) === '.html') {
+      let key = file.name.split('.')[0];
       let value = PATH.join(COMPONENTS, file.name);
       filePaths.push({ name: key, path: value });
     }
   });
   const PROMISES = filePaths.map((path) => {
     return new Promise((resolve) => {
-      let COMPONENT = "";
+      let COMPONENT = '';
       return FS.createReadStream(path.path)
-        .on("data", (chunk) => {
+        .on('data', (chunk) => {
           COMPONENT += chunk;
         })
-        .on("end", () => {
+        .on('end', () => {
           resolve({ name: path.name, html: COMPONENT });
         });
     });
@@ -37,12 +36,12 @@ async function readComponentsHTML() {
 async function createIndex(pathToIndex) {
   const COMPONENTS_HTML = await readComponentsHTML();
   let TEMPLATE_HTML = await new Promise((resolve) => {
-    let data = "";
+    let data = '';
     FS.createReadStream(TEMPLATE_FILE)
-      .on("data", (chunk) => {
+      .on('data', (chunk) => {
         data += chunk;
       })
-      .on("end", () => resolve(data));
+      .on('end', () => resolve(data));
   });
 
   COMPONENTS_HTML.forEach((comp) => {
@@ -57,24 +56,30 @@ async function copyFiles(folderName){
   const ASSETS_DIST_FOLDER = PATH.join(DIST,'assets',folderName);
   const FILES = await FS.promises.readdir(ASSETS_FOLDER,{withFileTypes:true});
   for(let i=0;i<FILES.length;i++){
-     await FS.promises.copyFile(
+    await FS.promises.copyFile(
       PATH.join(ASSETS_FOLDER, FILES[i].name),
       PATH.join(ASSETS_DIST_FOLDER, FILES[i].name)
     );
+  }
 }
+
+async function deleteFiles(folderName) {
+  const ASSETS_DIST_FOLDER = PATH.join(DIST,'assets',folderName);
+  const FILES = await FS.promises.readdir(ASSETS_DIST_FOLDER,{withFileTypes:true});
+  for (let i = 0; i < FILES.length; i++) {
+    await FS.promises.rm(PATH.join(ASSETS_DIST_FOLDER,FILES[i].name), {
+      force: true,
+      recursive: true,
+    });
+  }
 }
+
 async function copyAssets() {
   try {
     await FS.promises.access(PATH.join(DIST,'assets'));
-    await FS.promises.rm(PATH.join(DIST,'assets','fonts'), { force: true, recursive: true });
-    await FS.promises.rm(PATH.join(DIST,'assets','fonts'), { force: true, recursive: true });
-    await FS.promises.rm(PATH.join(DIST,'assets','img'), { force: true, recursive: true });
-    await FS.promises.rm(PATH.join(DIST,'assets','svg'), { force: true, recursive: true });
-    await FS.promises.rm(PATH.join(DIST,'assets'), { force: true,recursive: true });
-    await FS.promises.mkdir(PATH.join(DIST,'assets'), { recursive: true });
-    await FS.promises.mkdir(PATH.join(DIST,'assets','fonts'), { recursive: true });
-    await FS.promises.mkdir(PATH.join(DIST,'assets','img'), { recursive: true });
-    await FS.promises.mkdir(PATH.join(DIST,'assets','svg'), { recursive: true });
+    await deleteFiles('fonts');
+    await deleteFiles('img');
+    await deleteFiles('svg');
   } catch (error) {
     await FS.promises.mkdir(PATH.join(DIST,'assets'), { recursive: true });
     await FS.promises.mkdir(PATH.join(DIST,'assets','fonts'), { recursive: true });
@@ -107,11 +112,11 @@ async function mergeStyles() {
     });
   });
   const PROMISES_CSS = await Promise.all(PROMISES);
-  const RESULT_CSS = FS.createWriteStream(PATH.join(DIST, 'style.css'));
-    PROMISES_CSS.forEach((result) => {
-      RESULT_CSS.write(result);
-    });
+  const RESULT_CSS = FS.createWriteStream(STYLE_FILE);
+  PROMISES_CSS.forEach((result) => {
+    RESULT_CSS.write(result);
+  });
 }
-createIndex(INDEX_FILE);
-copyAssets();
-mergeStyles();
+
+createIndex(INDEX_FILE).then(()=>{mergeStyles();}).then(()=>{copyAssets();});
+
