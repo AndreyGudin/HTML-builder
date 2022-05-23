@@ -43,9 +43,10 @@ async function createIndex(pathToIndex) {
       })
       .on('end', () => resolve(data));
   });
-
   COMPONENTS_HTML.forEach((comp) => {
-    TEMPLATE_HTML = TEMPLATE_HTML.replaceAll(`{{${comp.name}}}`, comp.html);
+    let regString =`{{${comp.name}}}`;
+    let reg = new RegExp(regString,'g');
+    TEMPLATE_HTML = TEMPLATE_HTML.replace(reg, comp.html);
   });
   return await FS.promises.mkdir(DIST, { recursive: true }).then(() => {
     FS.createWriteStream(pathToIndex).write(TEMPLATE_HTML);
