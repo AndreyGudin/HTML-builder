@@ -13,8 +13,12 @@ stdout.write('Введите текст:\n');
 r1.on('line',(line)=>{
   if (line==='exit') {r1.close();process.exit();}
   stdout.write('Введите текст:\n');
-  inputToFile.write(line);
+  inputToFile.write(line+'\n');
 });
 r1.on('close',()=>{
   console.log('Программа завершена');
 });
+process.on("SIGINT",()=>{
+  r1.close();
+  process.exit();
+})
